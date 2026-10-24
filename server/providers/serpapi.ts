@@ -1,0 +1,4 @@
+export type SearchRecord={title?:string;link?:string;snippet?:string;date?:string};
+export type SearchProvider=(query:string)=>Promise<SearchRecord[]>;
+export function createSerpApiProvider(apiKey:string,fetcher:typeof fetch=fetch):SearchProvider{return async(query)=>{const url=new URL('https://serpapi.com/search.json');url.searchParams.set('engine','google');url.searchParams.set('q',query);url.searchParams.set('api_key',apiKey);const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),10000);try{const response=await fetcher(url,{signal:controller.signal});if(!response.ok)throw Object.assign(new Error(`SerpApi returned HTTP ${response.status}`),{status:response.status});const body=await response.json() as {organic_results?:SearchRecord[];error?:string};if(body.error)throw new Error('SerpApi search failed');return body.organic_results||[];}finally{clearTimeout(timer);}};}
+
