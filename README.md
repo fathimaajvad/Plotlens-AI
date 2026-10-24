@@ -12,7 +12,7 @@ Property information is fragmented across listing portals and public pages. List
 
 **Hosted demo:** No publicly accessible deployed demo is configured or documented in this repository. The GitHub repository is the source code, not a hosted product.
 
-To publish a demo, deploy the Express API as a Node service, set provider credentials in that host's secret settings, deploy the Vite production frontend (`dist/`) to a static host, and configure the public frontend host to route `/api` requests to the API service. The current Vite proxy is development-only. Add the verified public URL here after deployment and confirm it loads without exposing credentials.
+To publish a demo, deploy the Express API to Render and the Vite frontend (`dist/`) to Vercel, then configure their public origins. The current Vite proxy is development-only. See [Public Demo Deployment](docs/DEPLOYMENT.md) for the exact setup. Add a verified public URL here after deployment and confirm it loads without exposing credentials.
 
 ## Screenshots
 
@@ -77,11 +77,13 @@ The backend loads the root `.env` through `import 'dotenv/config'` in `server/in
 | Variable | Purpose |
 | --- | --- |
 | `PORT` | Optional API port (default `3001`). |
+| `FRONTEND_ORIGIN` | Backend CORS allowlist: exact public frontend origin(s), comma-separated if needed. Local development origins are allowed outside production. |
 | `SERPAPI_API_KEY` | Enables external property discovery and investigation searches. |
 | `OPENAI_API_KEY` | Enables model analysis. |
 | `OPENAI_MODEL` | Required with the key; must be available to the account and support the Responses API structured output used here. No model default is assumed. |
 | `GOOGLE_MAPS_API_KEY` | Read for configuration status; no Street View panorama is implemented and this value is not sent to the browser. |
 | `PROPERTY_SEARCH_DOMAINS` | Optional comma-separated preferred search domains, validated and capped at eight. |
+| `VITE_API_BASE` | Frontend build-time public API origin for a separate API host. It is public configuration, never a secret. |
 
 Blank placeholders are in `.env.example`. Demo/limited/live mode describes provider configuration, not whether an individual request succeeded. Search and report responses carry request outcomes and cache information.
 
@@ -113,6 +115,7 @@ The test suite mocks providers and does not require live API calls. The build ch
 - [API reference](docs/API_REFERENCE.md)
 - [Risk investigation sprint notes](docs/RISK_INVESTIGATION_SPRINT.md)
 - [Build and prior verification notes](BUILD_STATUS.md)
+- [Public demo deployment](docs/DEPLOYMENT.md) and [Render service blueprint](render.yaml)
 - [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
 
 No `LICENSE` file or license selection exists in this repository; licensing remains unspecified.

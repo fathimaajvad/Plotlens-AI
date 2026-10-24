@@ -1,11 +1,37 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import request from 'supertest';
 import { listings } from './listings.js';
+import { isAllowedOrigin } from './cors.js';
 
 let app: (typeof import('./index.js'))['app'];
-beforeAll(async () => { process.env.NODE_ENV = 'test'; process.env.SERPAPI_API_KEY = ''; process.env.OPENAI_API_KEY = ''; process.env.OPENAI_MODEL = ''; ({ app } = await import('./index.js')); });
+beforeAll(async () => { process.env.NODE_ENV = 'test'; process.env.FRONTEND_ORIGIN = ''; process.env.SERPAPI_API_KEY = ''; process.env.OPENAI_API_KEY = ''; process.env.OPENAI_MODEL = ''; ({ app } = await import('./index.js')); });
 
 describe('PlotLens API', () => {
+  it('restricts production CORS to the configured frontend origin', () => {
+    const previousMode = process.env.NODE_ENV;
+    const previousOrigin = process.env.FRONTEND_ORIGIN;
+    process.env.NODE_ENV = 'production';
+    process.env.FRONTEND_ORIGIN = 'https://demo.example, https://preview.example';
+    try {
+      expect(isAllowedOrigin('https://demo.example')).toBe(true);
+      expect(isAllowedOrigin('https://preview.example')).toBe(true);
+      expect(isAllowedOrigin('https://unlisted.example')).toBe(false);
+      expect(isAllowedOrigin('http://localhost:5173')).toBe(false);
+    } finally {
+      if (previousMode === undefined) delete process.env.NODE_ENV;
+      else process.env.NODE_ENV = previousMode;
+      if (previousOrigin === undefined) delete process.env.FRONTEND_ORIGIN;
+      else process.env.FRONTEND_ORIGIN = previousOrigin;
+    }
+  });
+
+  it('allows the local development origin and omits CORS for other origins', async () => {
+    const local = await request(app).get('/api/health').set('Origin', 'http://localhost:5173');
+    expect(local.headers['access-control-allow-origin']).toBe('http://localhost:5173');
+    const other = await request(app).get('/api/health').set('Origin', 'https://unlisted.example');
+    expect(other.headers['access-control-allow-origin']).toBeUndefined();
+  });
+
   it('reports provider mode without exposing credential values', async () => {
     const response = await request(app).get('/api/health');
     expect(response.status).toBe(200);

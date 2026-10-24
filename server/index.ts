@@ -9,9 +9,10 @@ import { listings as seed, filterListings, sortListings } from './listings.js';
 import { investigate } from './investigation/controller.js';
 import { createSerpApiProvider } from './providers/serpapi.js';
 import { searchProperties } from './providers/property-search.js';
+import { isAllowedOrigin } from './cors.js';
 
 export const app = express();
-app.use(cors());
+app.use(cors({ origin: (origin, callback) => callback(null, isAllowedOrigin(origin)) }));
 app.use(express.json({ limit: '32kb' }));
 
 const local: Listing[] = [];
